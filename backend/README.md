@@ -1,491 +1,298 @@
-# News Chatbot Backend
+# RAG Chatbot Backend
 
-This is the backend for a RAG-powered chatbot that answers queries about news articles. It uses a Retrieval-Augmented Generation (RAG) pipeline to provide accurate responses based on a corpus of news articles.
-
-## Tech Stack
-
-- **Node.js** with Express for the REST API
-- **Socket.io** for real-time chat
-- **Redis** for in-memory chat history and session management
-- **Qdrant** as the vector database for storing embeddings
-- **Jina AI** for generating embeddings
-- **Google Gemini** for generating responses
+A Node.js/Express backend implementing a Retrieval-Augmented Generation (RAG) pipeline for news article chatbots.
 
 ## Features
 
-- Ingests ~50 news articles from Reuters
-- Generates embeddings for articles and stores them in Qdrant
-- Retrieves relevant passages for user queries
-- Generates streaming responses using Google Gemini
-- Maintains chat history in Redis
-- Provides both REST API and Socket.io interfaces
+- **RAG Pipeline**: Ingests news articles, creates embeddings with Jina AI, and stores in Qdrant vector database
+- **Real-time Chat**: WebSocket support using Socket.IO for instant messaging
+- **Session Management**: Redis-based session storage with configurable TTL
+- **News Ingestion**: Automated RSS feed scraping from major news sources
+- **Caching**: In-memory chat history and session caching
+- **Rate Limiting**: API rate limiting for production use
 
-## Setup
+## Tech Stack
 
-1. Clone the repository
+- **Framework**: Node.js + Express
+- **Vector Database**: Qdrant
+- **Embeddings**: Jina AI Embeddings v2
+- **LLM**: Google Gemini Pro
+- **Cache**: Redis
+- **WebSockets**: Socket.IO
+
+## Prerequisites
+
+- Node.js 18+
+- Redis server
+- Qdrant vector database
+- API keys for Jina AI and Google Gemini
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-repo/rag-chatbot-backend.git
+cd rag-chatbot-backend
+```
+
 2. Install dependencies:
-   \`\`\`
-   npm install
-   \`\`\`
-3. Create a `.env` file based on `.env.example` and fill in your API keys and configuration
-4. Start the server:
-   \`\`\`
-   npm start
-   \`\`\`
+```bash
+npm install
+```
 
-## Environment Variables
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
 
-- `PORT`: Port for the server (default: 5000)
-- `FRONTEND_URL`: URL of the frontend for CORS (default: http://localhost:3000)
-- `REDIS_HOST`: Redis host (default: localhost)
-- `REDIS_PORT`: Redis port (default: 6379)
-- `REDIS_PASSWORD`: Redis password (if any)
-- `QDRANT_URL`: Qdrant URL (default: http://localhost:6333)
-- `QDRANT_API_KEY`: Qdrant API key (if using cloud version)
-- `JINA_API_KEY`: Jina AI API key
-- `GEMINI_API_KEY`: Google Gemini API key
+4. Configure your `.env` file:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+JINA_API_KEY=your_jina_api_key_here
+REDIS_URL=redis://localhost:6379
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
+PORT=5000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+SESSION_TTL=3600
+```
 
-## Detailed System Architecture
+## Getting API Keys
 
-### 1. RAG Pipeline Implementation
+### Google Gemini API Key
+1. Visit [Google AI Studio](https://aistudio.google.com/apikey)
+2. Sign in with your Google account
+3. Create a new API key
+4. Copy the key to your `.env` file
 
-#### News Ingestion Process
+### Jina AI API Key
+1. Visit [Jina AI Embeddings](https://jina.ai/embeddings)
+2. Sign up for a free account
+3. Generate an API key
+4. Copy the key to your `.env` file
 
-The system fetches approximately 50 news articles from Reuters using their sitemap:
+## Setting up Dependencies
 
-\`\`\`javascript
-// From newsIngestion.js
-async function fetchAndProcessNews() {
-  // Fetch Reuters sitemap
-  const sitemapUrl = "https://www.reuters.com/arc/outboundfeeds/sitemap-index/?outputType=xml";
-  const sitemapResponse = await axios.get(sitemapUrl);
-  const sitemapData = await parseStringPromise(sitemapResponse.data);
+### Redis Installation
+```bash
+# Using Docker
+docker run -d --name redis -p 6379:6379 redis:alpine
 
-  // Get the first news sitemap URL
-  const newsSitemapUrl = sitemapData.sitemapindex.sitemap[0].loc[0];
+# Or install locally (Ubuntu)
+sudo apt update
+sudo apt install redis-server
+sudo systemctl start redis-server
 
-  // Fetch the news sitemap
-  const newsSitemapResponse = await axios.get(newsSitemapUrl);
-  const newsSitemapData = await parseStringPromise(newsSitemapResponse.data);
+# Or using Homebrew (macOS)
+brew install redis
+brew services start redis
+```
 
-  // Get article URLs (limit to 50)
-  const articleUrls = newsSitemapData.urlset.url.slice(0, 50).map((url) => url.loc[0]);
-  
-  // Process each article...
-}
-\`\`\`
+### Qdrant Installation
+```bash
+# Using Docker
+docker run -p 6333:6333 qdrant/qdrant
 
-Each article is parsed to extract the title, content, and publication date using HTML parsing:
+# Or download binary from https://qdrant.tech/documentation/quick-start/
+```
 
-\`\`\`javascript
-// From newsIngestion.js
-async function fetchAndParseArticle(url) {
-  const response = await axios.get(url);
-  const root = parse(response.data);
+## Usage
 
-  // Extract title
-  const titleElement = root.querySelector("h1") || root.querySelector("title");
-  const title = titleElement ? titleElement.text.trim() : "Untitled Article";
+1. Start Redis and Qdrant services
+2. Start the development server:
+```bash
+npm run dev
+```
 
-  // Extract content
-  const paragraphs = root.querySelectorAll("p");
-  const content = paragraphs
-    .map((p) => p.text.trim())
-    .filter((text) => text.length > 50) // Filter out short paragraphs
-    .join("\n\n");
-    
-  // ...
-}
-\`\`\`
-
-#### Embedding Generation and Storage
-
-For each article, we generate embeddings using Jina AI's embedding service:
-
-\`\`\`javascript
-// From embeddings.js
-async function generateEmbeddings(text) {
-  const response = await axios.post(
-    JINA_API_URL,
-    {
-      input: text,
-      model: "jina-embeddings-v2-base-en",
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${JINA_API_KEY}`,
-      },
-    }
-  );
-
-  return response.data.data[0].embedding;
-}
-\`\`\`
-
-These embeddings are stored in Qdrant, a vector database, along with the article metadata:
-
-\`\`\`javascript
-// From index.js
-async function initializeVectorDB() {
-  // Check if collection exists
-  const collections = await qdrantClient.getCollections();
-  const collectionExists = collections.collections.some(c => c.name === COLLECTION_NAME);
-  
-  if (!collectionExists) {
-    // Create collection
-    await qdrantClient.createCollection(COLLECTION_NAME, {
-      vectors: {
-        size: 768, // Jina embeddings dimension
-        distance: "Cosine",
-      },
-    });
-    
-    // Fetch and process news articles
-    const newsArticles = await fetchAndProcessNews();
-    
-    // Generate embeddings and store in Qdrant
-    for (const article of newsArticles) {
-      const embedding = await generateEmbeddings(article.content);
-      await qdrantClient.upsert(COLLECTION_NAME, {
-        wait: true,
-        points: [
-          {
-            id: article.id,
-            vector: embedding,
-            payload: {
-              title: article.title,
-              content: article.content,
-              url: article.url,
-              publishedAt: article.publishedAt,
-            },
-          },
-        ],
-      });
-    }
-  }
-}
-\`\`\`
-
-#### Query Processing and Retrieval
-
-When a user asks a question, the system generates an embedding for the query and searches Qdrant for the most semantically similar articles:
-
-\`\`\`javascript
-// From index.js
-async function retrieveRelevantPassages(query, topK = 3) {
-  const embedding = await generateEmbeddings(query);
-  const searchResult = await qdrantClient.search(COLLECTION_NAME, {
-    vector: embedding,
-    limit: topK,
-  });
-  
-  return searchResult.map(result => ({
-    content: result.payload.content,
-    title: result.payload.title,
-    url: result.payload.url,
-    score: result.score,
-  }));
-}
-\`\`\`
-
-### 2. Redis Caching & Session Management
-
-#### Session Creation and Management
-
-Each user gets a unique session ID (UUID). Chat history is stored in Redis lists with a 24-hour TTL:
-
-\`\`\`javascript
-// From index.js
-// Session TTL in seconds (24 hours)
-const SESSION_TTL = 24 * 60 * 60;
-
-// Store message in Redis
-await redis.lpush(
-  `chat:${sessionId}`,
-  JSON.stringify({
-    role: "user",
-    content: message,
-    timestamp: Date.now(),
-  })
-);
-
-// Set TTL for the session
-await redis.expire(`chat:${sessionId}`, SESSION_TTL);
-\`\`\`
-
-#### Chat History Retrieval
-
-Chat history is retrieved from Redis and returned in chronological order:
-
-\`\`\`javascript
-// From index.js
-app.get("/api/history/:sessionId", async (req, res) => {
-  const { sessionId } = req.params;
-  
-  // Retrieve chat history from Redis
-  const history = await redis.lrange(`chat:${sessionId}`, 0, -1);
-  
-  // Parse and reverse to get chronological order
-  const parsedHistory = history.map(JSON.parse).reverse();
-  
-  res.json({
-    sessionId,
-    history: parsedHistory,
-  });
-});
-\`\`\`
-
-#### Session Clearing
-
-Sessions can be cleared manually by the user:
-
-\`\`\`javascript
-// From index.js
-app.delete("/api/session/:sessionId", async (req, res) => {
-  const { sessionId } = req.params;
-  
-  // Delete chat history from Redis
-  await redis.del(`chat:${sessionId}`);
-  
-  res.json({
-    success: true,
-    message: "Session cleared successfully",
-  });
-});
-\`\`\`
-
-### 3. Streaming Response Implementation
-
-The system uses Gemini's streaming API to generate responses chunk by chunk:
-
-\`\`\`javascript
-// From index.js
-async function generateResponse(query, context) {
-  const contextText = context
-    .map(item => `Title: ${item.title}\nContent: ${item.content}\nURL: ${item.url}`)
-    .join('\n\n');
-  
-  const prompt = `
-  You are a helpful assistant for a news website. Answer the following question based on the provided news articles.
-  If the information is not in the provided articles, say that you don't have enough information.
-  
-  News Articles:
-  ${contextText}
-  
-  User Question: ${query}
-  
-  Your Answer:`;
-  
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-  const result = await model.generateContentStream(prompt);
-  
-  return result;
-}
-\`\`\`
-
-The streaming response is sent to the client in real-time:
-
-\`\`\`javascript
-// From index.js
-// Stream the response
-for await (const chunk of responseStream.stream) {
-  const chunkText = chunk.text();
-  fullResponse += chunkText;
-
-  // Update the message in Redis
-  await redis.lset(
-    `chat:${sessionId}`,
-    0,
-    JSON.stringify({
-      role: "assistant",
-      content: fullResponse,
-      timestamp: responseTimestamp,
-    })
-  );
-
-  // Emit the chunk to all clients in the session
-  io.to(sessionId).emit("chat chunk", {
-    text: chunkText,
-    timestamp: responseTimestamp,
-  });
-}
-\`\`\`
+3. The server will start on `http://localhost:5000`
 
 ## API Endpoints
 
-### POST /api/chat
-Send a message to the chatbot.
+### REST API
 
-**Request Body:**
-\`\`\`json
-{
-  "message": "What's the latest news about climate change?",
-  "sessionId": "optional-session-id"
-}
-\`\`\`
+- `POST /api/sessions` - Create a new chat session
+- `GET /api/sessions/:sessionId/history` - Get session chat history
+- `DELETE /api/sessions/:sessionId` - Clear session history
+- `POST /api/chat` - Send a chat message (REST fallback)
+- `POST /api/ingest` - Manually trigger article ingestion
+- `GET /health` - Health check endpoint
 
-**Response:**
-\`\`\`json
-{
-  "sessionId": "session-id",
-  "message": "Response from the chatbot"
-}
-\`\`\`
+### WebSocket Events
 
-### GET /api/history/:sessionId
-Get chat history for a session.
+**Client → Server:**
+- `join-session` - Join a session room
+- `send-message` - Send a chat message
+- `clear-session` - Clear session history
 
-**Response:**
-\`\`\`json
-{
-  "sessionId": "session-id",
-  "history": [
-    {
-      "role": "user",
-      "content": "What's the latest news about climate change?",
-      "timestamp": 1637097600000
-    },
-    {
-      "role": "assistant",
-      "content": "Response from the chatbot",
-      "timestamp": 1637097601000
-    }
-  ]
-}
-\`\`\`
+**Server → Client:**
+- `bot-response` - Receive bot response
+- `bot-typing` - Bot typing indicator
+- `session-cleared` - Session cleared confirmation
+- `error` - Error message
 
-### DELETE /api/session/:sessionId
-Clear chat history for a session.
+## Architecture
 
-**Response:**
-\`\`\`json
-{
-  "success": true,
-  "message": "Session cleared successfully"
-}
-\`\`\`
+### RAG Pipeline Flow
 
-## Socket.io Events
+1. **Article Ingestion**:
+   - Scrapes RSS feeds from major news sources (CNN, BBC, Reuters)
+   - Extracts title, content, URL, and metadata
+   - Creates embeddings using Jina AI Embeddings v2
 
-### Client to Server
+2. **Vector Storage**:
+   - Stores embeddings in Qdrant vector database
+   - Uses cosine similarity for retrieval
+   - Maintains article metadata as payloads
 
-- `join`: Join a session
-  \`\`\`json
-  "session-id"
-  \`\`\`
+3. **Query Processing**:
+   - Receives user query via REST API or WebSocket
+   - Creates query embedding using same Jina model
+   - Retrieves top-k (default: 5) most relevant articles
 
-- `chat message`: Send a message
-  \`\`\`json
-  {
-    "message": "What's the latest news about climate change?",
-    "sessionId": "session-id"
-  }
-  \`\`\`
+4. **Response Generation**:
+   - Constructs context from retrieved articles
+   - Includes chat history for contextual responses
+   - Generates response using Google Gemini Pro
+   - Returns response with source citations
 
-- `clear session`: Clear a session
-  \`\`\`json
-  "session-id"
-  \`\`\`
+### Session Management
 
-### Server to Client
+- **Session Creation**: Each new user gets a unique session ID (UUID)
+- **History Storage**: Chat history stored in Redis with configurable TTL
+- **Cache Strategy**: In-memory caching with Redis persistence
+- **Session Cleanup**: Automatic expiration after TTL period
 
-- `chat message`: Receive a message
-  \`\`\`json
-  {
-    "role": "user|assistant",
-    "content": "Message content",
-    "timestamp": 1637097600000
-  }
-  \`\`\`
+### Caching Strategy
 
-- `chat chunk`: Receive a chunk of the streaming response
-  \`\`\`json
-  {
-    "text": "Chunk of text",
-    "timestamp": 1637097600000
-  }
-  \`\`\`
+```javascript
+// Session History Caching
+Key: session:{sessionId}:history
+TTL: 3600 seconds (1 hour)
+Structure: List of JSON objects (messages)
 
-- `chat complete`: Receive the complete response
-  \`\`\`json
-  {
-    "role": "assistant",
-    "content": "Complete response",
-    "timestamp": 1637097600000
-  }
-  \`\`\`
+// Cache Warming (future enhancement)
+// - Pre-load popular queries
+// - Cache embeddings for frequent searches
+// - Background refresh of news articles
+```
 
-- `typing`: Typing indicator
-  \`\`\`json
-  true|false
-  \`\`\`
+## Performance Optimizations
 
-- `session cleared`: Session cleared notification
+- **Rate Limiting**: 100 requests per 15 minutes per IP
+- **Connection Pooling**: Redis connection pooling
+- **Batch Processing**: Efficient vector operations
+- **Streaming Responses**: Real-time message streaming via WebSocket
+- **Lazy Loading**: On-demand article ingestion
 
-- `error`: Error notification
-  \`\`\`json
-  {
-    "message": "Error message"
-  }
-  \`\`\`
+## Configuration
 
-## Caching & Performance Considerations
+### Environment Variables
 
-### TTL Configuration
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GEMINI_API_KEY` | Google Gemini API key | Required |
+| `JINA_API_KEY` | Jina AI API key | Required |
+| `REDIS_URL` | Redis connection URL | `redis://localhost:6379` |
+| `QDRANT_HOST` | Qdrant host | `localhost` |
+| `QDRANT_PORT` | Qdrant port | `6333` |
+| `PORT` | Server port | `5000` |
+| `SESSION_TTL` | Session TTL in seconds | `3600` |
+| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:3000` |
 
-Chat history is cached in Redis with a TTL of 24 hours. This ensures that inactive sessions are automatically cleaned up:
+### Cache Configuration
 
-\`\`\`javascript
-// Session TTL in seconds (24 hours)
-const SESSION_TTL = 24 * 60 * 60;
+```javascript
+// TTL Configuration
+SESSION_TTL=3600          # 1 hour session expiry
+CACHE_WARM_INTERVAL=300   # 5 minutes cache warming
+MAX_HISTORY_LENGTH=50     # Maximum messages per session
 
-// Set TTL for the session
-await redis.expire(`chat:${sessionId}`, SESSION_TTL);
-\`\`\`
+// Vector Search Configuration
+TOP_K=5                   # Number of articles to retrieve
+SIMILARITY_THRESHOLD=0.7  # Minimum similarity score
+EMBEDDING_DIMENSION=1024  # Jina embeddings dimension
+```
 
-For production environments, you might want to adjust the TTL based on your application's needs:
-- Short-lived sessions (1-2 hours) for high-traffic applications
-- Longer sessions (1-7 days) for applications where users might return to continue conversations
+## Testing
 
-### Cache Warming
+```bash
+# Run tests
+npm test
 
-For improved performance, you could implement cache warming strategies:
-1. **Precompute common queries**: Identify frequently asked questions and precompute their embeddings
-2. **Periodic refreshing**: Refresh the news corpus and embeddings at regular intervals (e.g., every 6 hours)
-3. **Lazy loading**: Load only the most recent articles initially, then load more as needed
+# Run with coverage
+npm run test:coverage
 
-### Performance Optimizations
-
-1. **Batch processing**: When ingesting news articles, process them in batches to reduce API calls
-2. **Connection pooling**: Use connection pooling for Redis to reduce connection overhead
-3. **Horizontal scaling**: Deploy multiple instances of the backend behind a load balancer
-4. **Caching embeddings**: Cache frequently used query embeddings to reduce computation
-
-## Design Decisions and Potential Improvements
-
-### Design Decisions
-
-1. **Streaming responses**: We chose to implement streaming responses for a better user experience, showing responses as they're generated
-2. **Socket.io for real-time communication**: Socket.io provides a reliable way to implement real-time features with fallbacks
-3. **Redis for session management**: Redis offers fast in-memory storage with TTL support, making it ideal for session management
-4. **Qdrant for vector storage**: Qdrant provides efficient vector search capabilities with a simple API
-
-### Potential Improvements
-
-1. **SQL database integration**: Add a SQL database to persist chat transcripts for long-term storage and analysis
-2. **User authentication**: Implement user authentication to associate sessions with specific users
-3. **Enhanced RAG pipeline**: Implement more sophisticated chunking strategies for better retrieval
-4. **Monitoring and analytics**: Add monitoring for API usage, response times, and user satisfaction
-5. **Multi-modal support**: Add support for images and other media in the chat
-6. **Feedback mechanism**: Allow users to provide feedback on responses to improve the system
+# Test specific endpoint
+curl -X POST http://localhost:5000/api/sessions
+```
 
 ## Deployment
 
-This backend can be deployed to any Node.js hosting service like Render, Heroku, or Vercel. Make sure to set up the required environment variables and services (Redis, Qdrant) before deployment.
+### Using Docker
 
-For production deployments, consider:
-1. Using managed Redis services like Redis Labs or Upstash
-2. Using Qdrant Cloud for vector storage
-3. Setting up proper monitoring and logging
-4. Implementing rate limiting and other security measures
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 5000
+CMD ["npm", "start"]
+```
+
+### Using Render.com
+
+1. Connect your GitHub repository
+2. Set environment variables in Render dashboard
+3. Deploy with build command: `npm install`
+4. Start command: `npm start`
+
+### Production Considerations
+
+- **Database**: Use managed Redis (Redis Cloud, AWS ElastiCache)
+- **Vector DB**: Use Qdrant Cloud or self-hosted cluster
+- **Monitoring**: Add logging, metrics, and health checks
+- **Security**: API authentication, HTTPS, input validation
+- **Scaling**: Load balancing, horizontal scaling
+
+## Error Handling
+
+The server implements comprehensive error handling:
+
+- **Validation Errors**: 400 Bad Request
+- **Authentication Errors**: 401 Unauthorized
+- **Not Found**: 404 Not Found
+- **Rate Limiting**: 429 Too Many Requests
+- **Server Errors**: 500 Internal Server Error
+
+## Logging
+
+Structured logging for production debugging:
+
+```javascript
+// Example log entries
+2024-01-15T10:30:00Z INFO Server started on port 5000
+2024-01-15T10:30:05Z INFO Article ingestion completed: 47 articles
+2024-01-15T10:30:15Z ERROR Failed to generate response: API rate limit exceeded
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Support
+
+For issues and questions:
+- Create a GitHub issue
+- Check the documentation
+- Review the code walkthrough video
