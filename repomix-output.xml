@@ -1,0 +1,2396 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+backend/.gitignore
+backend/package.json
+backend/README.md
+backend/src/config/env.js
+backend/src/config/index.js
+backend/src/config/qdrant.js
+backend/src/config/redis.js
+backend/src/index.js
+backend/src/routes/chat.js
+backend/src/routes/index.js
+backend/src/routes/session.js
+backend/src/server.js
+backend/src/services/chatbot.js
+backend/src/services/embedding.js
+backend/src/services/scraper.js
+backend/src/socket/chat.js
+backend/src/utils/errorHandler.js
+backend/src/utils/logger.js
+frontend-vite/.gitignore
+frontend-vite/eslint.config.js
+frontend-vite/index.html
+frontend-vite/package.json
+frontend-vite/public/vite.svg
+frontend-vite/README.md
+frontend-vite/src/App.css
+frontend-vite/src/App.jsx
+frontend-vite/src/assets/react.svg
+frontend-vite/src/components/ChatFooter.jsx
+frontend-vite/src/components/ChatHeader.jsx
+frontend-vite/src/components/ChatMessage.jsx
+frontend-vite/src/components/MessageInput.jsx
+frontend-vite/src/components/MessageList.jsx
+frontend-vite/src/hooks/useChat.js
+frontend-vite/src/index.css
+frontend-vite/src/main.jsx
+frontend-vite/vite.config.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="backend/.gitignore">
+# Node dependencies
+node_modules/
+
+# Env vars
+.env
+.env.*  # Includes .env.local, .env.production, etc.
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime
+pids/
+*.pid
+*.pid.lock
+
+# Coverage and builds
+coverage/
+dist/
+tmp/
+temp/
+
+# Redis/Qdrant files
+dump.rdb
+*.qdrant
+qdrant_data/
+.embeddings_cache/
+
+# System/IDE
+.DS_Store
+.idea/
+.vscode/
+</file>
+
+<file path="backend/package.json">
+{
+  "name": "news-chatbot-backend",
+  "version": "1.0.0",
+  "description": "Backend for RAG-powered news chatbot",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/genai": "^0.13.0",
+    "@google/generative-ai": "^0.2.0",
+    "@qdrant/js-client-rest": "^1.7.0",
+    "axios": "^1.6.2",
+    "cheerio": "^1.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.1.0",
+    "ioredis": "^5.3.2",
+    "node-html-parser": "^6.1.11",
+    "redis": "^5.8.2",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.1",
+    "winston": "^3.17.0",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
+</file>
+
+<file path="backend/README.md">
+# News Chatbot Backend
+
+This is the backend for a RAG-powered chatbot that answers queries about news articles. It uses a Retrieval-Augmented Generation (RAG) pipeline to provide accurate responses based on a corpus of news articles.
+
+## Tech Stack
+
+- **Node.js** with Express for the REST API
+- **Socket.io** for real-time chat
+- **Redis** for in-memory chat history and session management
+- **Qdrant** as the vector database for storing embeddings
+- **Jina AI** for generating embeddings
+- **Google Gemini** for generating responses
+
+## Features
+
+- Ingests ~50 news articles from Reuters
+- Generates embeddings for articles and stores them in Qdrant
+- Retrieves relevant passages for user queries
+- Generates streaming responses using Google Gemini
+- Maintains chat history in Redis
+- Provides both REST API and Socket.io interfaces
+
+## Setup
+
+1. Clone the repository
+2. Install dependencies:
+   \`\`\`
+   npm install
+   \`\`\`
+3. Create a `.env` file based on `.env.example` and fill in your API keys and configuration
+4. Start the server:
+   \`\`\`
+   npm start
+   \`\`\`
+
+## Environment Variables
+
+- `PORT`: Port for the server (default: 5000)
+- `FRONTEND_URL`: URL of the frontend for CORS (default: http://localhost:3000)
+- `REDIS_HOST`: Redis host (default: localhost)
+- `REDIS_PORT`: Redis port (default: 6379)
+- `REDIS_PASSWORD`: Redis password (if any)
+- `QDRANT_URL`: Qdrant URL (default: http://localhost:6333)
+- `QDRANT_API_KEY`: Qdrant API key (if using cloud version)
+- `JINA_API_KEY`: Jina AI API key
+- `GEMINI_API_KEY`: Google Gemini API key
+
+## Detailed System Architecture
+
+### 1. RAG Pipeline Implementation
+
+#### News Ingestion Process
+
+The system fetches approximately 50 news articles from Reuters using their sitemap:
+
+\`\`\`javascript
+// From newsIngestion.js
+async function fetchAndProcessNews() {
+  // Fetch Reuters sitemap
+  const sitemapUrl = "https://www.reuters.com/arc/outboundfeeds/sitemap-index/?outputType=xml";
+  const sitemapResponse = await axios.get(sitemapUrl);
+  const sitemapData = await parseStringPromise(sitemapResponse.data);
+
+  // Get the first news sitemap URL
+  const newsSitemapUrl = sitemapData.sitemapindex.sitemap[0].loc[0];
+
+  // Fetch the news sitemap
+  const newsSitemapResponse = await axios.get(newsSitemapUrl);
+  const newsSitemapData = await parseStringPromise(newsSitemapResponse.data);
+
+  // Get article URLs (limit to 50)
+  const articleUrls = newsSitemapData.urlset.url.slice(0, 50).map((url) => url.loc[0]);
+  
+  // Process each article...
+}
+\`\`\`
+
+Each article is parsed to extract the title, content, and publication date using HTML parsing:
+
+\`\`\`javascript
+// From newsIngestion.js
+async function fetchAndParseArticle(url) {
+  const response = await axios.get(url);
+  const root = parse(response.data);
+
+  // Extract title
+  const titleElement = root.querySelector("h1") || root.querySelector("title");
+  const title = titleElement ? titleElement.text.trim() : "Untitled Article";
+
+  // Extract content
+  const paragraphs = root.querySelectorAll("p");
+  const content = paragraphs
+    .map((p) => p.text.trim())
+    .filter((text) => text.length > 50) // Filter out short paragraphs
+    .join("\n\n");
+    
+  // ...
+}
+\`\`\`
+
+#### Embedding Generation and Storage
+
+For each article, we generate embeddings using Jina AI's embedding service:
+
+\`\`\`javascript
+// From embeddings.js
+async function generateEmbeddings(text) {
+  const response = await axios.post(
+    JINA_API_URL,
+    {
+      input: text,
+      model: "jina-embeddings-v2-base-en",
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${JINA_API_KEY}`,
+      },
+    }
+  );
+
+  return response.data.data[0].embedding;
+}
+\`\`\`
+
+These embeddings are stored in Qdrant, a vector database, along with the article metadata:
+
+\`\`\`javascript
+// From index.js
+async function initializeVectorDB() {
+  // Check if collection exists
+  const collections = await qdrantClient.getCollections();
+  const collectionExists = collections.collections.some(c => c.name === COLLECTION_NAME);
+  
+  if (!collectionExists) {
+    // Create collection
+    await qdrantClient.createCollection(COLLECTION_NAME, {
+      vectors: {
+        size: 768, // Jina embeddings dimension
+        distance: "Cosine",
+      },
+    });
+    
+    // Fetch and process news articles
+    const newsArticles = await fetchAndProcessNews();
+    
+    // Generate embeddings and store in Qdrant
+    for (const article of newsArticles) {
+      const embedding = await generateEmbeddings(article.content);
+      await qdrantClient.upsert(COLLECTION_NAME, {
+        wait: true,
+        points: [
+          {
+            id: article.id,
+            vector: embedding,
+            payload: {
+              title: article.title,
+              content: article.content,
+              url: article.url,
+              publishedAt: article.publishedAt,
+            },
+          },
+        ],
+      });
+    }
+  }
+}
+\`\`\`
+
+#### Query Processing and Retrieval
+
+When a user asks a question, the system generates an embedding for the query and searches Qdrant for the most semantically similar articles:
+
+\`\`\`javascript
+// From index.js
+async function retrieveRelevantPassages(query, topK = 3) {
+  const embedding = await generateEmbeddings(query);
+  const searchResult = await qdrantClient.search(COLLECTION_NAME, {
+    vector: embedding,
+    limit: topK,
+  });
+  
+  return searchResult.map(result => ({
+    content: result.payload.content,
+    title: result.payload.title,
+    url: result.payload.url,
+    score: result.score,
+  }));
+}
+\`\`\`
+
+### 2. Redis Caching & Session Management
+
+#### Session Creation and Management
+
+Each user gets a unique session ID (UUID). Chat history is stored in Redis lists with a 24-hour TTL:
+
+\`\`\`javascript
+// From index.js
+// Session TTL in seconds (24 hours)
+const SESSION_TTL = 24 * 60 * 60;
+
+// Store message in Redis
+await redis.lpush(
+  `chat:${sessionId}`,
+  JSON.stringify({
+    role: "user",
+    content: message,
+    timestamp: Date.now(),
+  })
+);
+
+// Set TTL for the session
+await redis.expire(`chat:${sessionId}`, SESSION_TTL);
+\`\`\`
+
+#### Chat History Retrieval
+
+Chat history is retrieved from Redis and returned in chronological order:
+
+\`\`\`javascript
+// From index.js
+app.get("/api/history/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+  
+  // Retrieve chat history from Redis
+  const history = await redis.lrange(`chat:${sessionId}`, 0, -1);
+  
+  // Parse and reverse to get chronological order
+  const parsedHistory = history.map(JSON.parse).reverse();
+  
+  res.json({
+    sessionId,
+    history: parsedHistory,
+  });
+});
+\`\`\`
+
+#### Session Clearing
+
+Sessions can be cleared manually by the user:
+
+\`\`\`javascript
+// From index.js
+app.delete("/api/session/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+  
+  // Delete chat history from Redis
+  await redis.del(`chat:${sessionId}`);
+  
+  res.json({
+    success: true,
+    message: "Session cleared successfully",
+  });
+});
+\`\`\`
+
+### 3. Streaming Response Implementation
+
+The system uses Gemini's streaming API to generate responses chunk by chunk:
+
+\`\`\`javascript
+// From index.js
+async function generateResponse(query, context) {
+  const contextText = context
+    .map(item => `Title: ${item.title}\nContent: ${item.content}\nURL: ${item.url}`)
+    .join('\n\n');
+  
+  const prompt = `
+  You are a helpful assistant for a news website. Answer the following question based on the provided news articles.
+  If the information is not in the provided articles, say that you don't have enough information.
+  
+  News Articles:
+  ${contextText}
+  
+  User Question: ${query}
+  
+  Your Answer:`;
+  
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const result = await model.generateContentStream(prompt);
+  
+  return result;
+}
+\`\`\`
+
+The streaming response is sent to the client in real-time:
+
+\`\`\`javascript
+// From index.js
+// Stream the response
+for await (const chunk of responseStream.stream) {
+  const chunkText = chunk.text();
+  fullResponse += chunkText;
+
+  // Update the message in Redis
+  await redis.lset(
+    `chat:${sessionId}`,
+    0,
+    JSON.stringify({
+      role: "assistant",
+      content: fullResponse,
+      timestamp: responseTimestamp,
+    })
+  );
+
+  // Emit the chunk to all clients in the session
+  io.to(sessionId).emit("chat chunk", {
+    text: chunkText,
+    timestamp: responseTimestamp,
+  });
+}
+\`\`\`
+
+## API Endpoints
+
+### POST /api/chat
+Send a message to the chatbot.
+
+**Request Body:**
+\`\`\`json
+{
+  "message": "What's the latest news about climate change?",
+  "sessionId": "optional-session-id"
+}
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "sessionId": "session-id",
+  "message": "Response from the chatbot"
+}
+\`\`\`
+
+### GET /api/history/:sessionId
+Get chat history for a session.
+
+**Response:**
+\`\`\`json
+{
+  "sessionId": "session-id",
+  "history": [
+    {
+      "role": "user",
+      "content": "What's the latest news about climate change?",
+      "timestamp": 1637097600000
+    },
+    {
+      "role": "assistant",
+      "content": "Response from the chatbot",
+      "timestamp": 1637097601000
+    }
+  ]
+}
+\`\`\`
+
+### DELETE /api/session/:sessionId
+Clear chat history for a session.
+
+**Response:**
+\`\`\`json
+{
+  "success": true,
+  "message": "Session cleared successfully"
+}
+\`\`\`
+
+## Socket.io Events
+
+### Client to Server
+
+- `join`: Join a session
+  \`\`\`json
+  "session-id"
+  \`\`\`
+
+- `chat message`: Send a message
+  \`\`\`json
+  {
+    "message": "What's the latest news about climate change?",
+    "sessionId": "session-id"
+  }
+  \`\`\`
+
+- `clear session`: Clear a session
+  \`\`\`json
+  "session-id"
+  \`\`\`
+
+### Server to Client
+
+- `chat message`: Receive a message
+  \`\`\`json
+  {
+    "role": "user|assistant",
+    "content": "Message content",
+    "timestamp": 1637097600000
+  }
+  \`\`\`
+
+- `chat chunk`: Receive a chunk of the streaming response
+  \`\`\`json
+  {
+    "text": "Chunk of text",
+    "timestamp": 1637097600000
+  }
+  \`\`\`
+
+- `chat complete`: Receive the complete response
+  \`\`\`json
+  {
+    "role": "assistant",
+    "content": "Complete response",
+    "timestamp": 1637097600000
+  }
+  \`\`\`
+
+- `typing`: Typing indicator
+  \`\`\`json
+  true|false
+  \`\`\`
+
+- `session cleared`: Session cleared notification
+
+- `error`: Error notification
+  \`\`\`json
+  {
+    "message": "Error message"
+  }
+  \`\`\`
+
+## Caching & Performance Considerations
+
+### TTL Configuration
+
+Chat history is cached in Redis with a TTL of 24 hours. This ensures that inactive sessions are automatically cleaned up:
+
+\`\`\`javascript
+// Session TTL in seconds (24 hours)
+const SESSION_TTL = 24 * 60 * 60;
+
+// Set TTL for the session
+await redis.expire(`chat:${sessionId}`, SESSION_TTL);
+\`\`\`
+
+For production environments, you might want to adjust the TTL based on your application's needs:
+- Short-lived sessions (1-2 hours) for high-traffic applications
+- Longer sessions (1-7 days) for applications where users might return to continue conversations
+
+### Cache Warming
+
+For improved performance, you could implement cache warming strategies:
+1. **Precompute common queries**: Identify frequently asked questions and precompute their embeddings
+2. **Periodic refreshing**: Refresh the news corpus and embeddings at regular intervals (e.g., every 6 hours)
+3. **Lazy loading**: Load only the most recent articles initially, then load more as needed
+
+### Performance Optimizations
+
+1. **Batch processing**: When ingesting news articles, process them in batches to reduce API calls
+2. **Connection pooling**: Use connection pooling for Redis to reduce connection overhead
+3. **Horizontal scaling**: Deploy multiple instances of the backend behind a load balancer
+4. **Caching embeddings**: Cache frequently used query embeddings to reduce computation
+
+## Design Decisions and Potential Improvements
+
+### Design Decisions
+
+1. **Streaming responses**: We chose to implement streaming responses for a better user experience, showing responses as they're generated
+2. **Socket.io for real-time communication**: Socket.io provides a reliable way to implement real-time features with fallbacks
+3. **Redis for session management**: Redis offers fast in-memory storage with TTL support, making it ideal for session management
+4. **Qdrant for vector storage**: Qdrant provides efficient vector search capabilities with a simple API
+
+### Potential Improvements
+
+1. **SQL database integration**: Add a SQL database to persist chat transcripts for long-term storage and analysis
+2. **User authentication**: Implement user authentication to associate sessions with specific users
+3. **Enhanced RAG pipeline**: Implement more sophisticated chunking strategies for better retrieval
+4. **Monitoring and analytics**: Add monitoring for API usage, response times, and user satisfaction
+5. **Multi-modal support**: Add support for images and other media in the chat
+6. **Feedback mechanism**: Allow users to provide feedback on responses to improve the system
+
+## Deployment
+
+This backend can be deployed to any Node.js hosting service like Render, Heroku, or Vercel. Make sure to set up the required environment variables and services (Redis, Qdrant) before deployment.
+
+For production deployments, consider:
+1. Using managed Redis services like Redis Labs or Upstash
+2. Using Qdrant Cloud for vector storage
+3. Setting up proper monitoring and logging
+4. Implementing rate limiting and other security measures
+</file>
+
+<file path="backend/src/config/env.js">
+const dotenv = require('dotenv');
+dotenv.config();
+
+const config = {
+  PORT: Number(process.env.PORT) || 5000,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  REDIS_URL: process.env.REDIS_URL,
+  QDRANT_URL: process.env.QDRANT_URL,
+  QDRANT_API_KEY: process.env.QDRANT_API_KEY,
+  JINA_API_KEY: process.env.JINA_API_KEY,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  COLLECTION_NAME: process.env.COLLECTION_NAME || 'news_articles',
+  EMBEDDING_DIM: Number(process.env.EMBEDDING_DIM) || 1024,
+  TOP_K: Number(process.env.TOP_K) || 5,
+  SESSION_TTL: Number(process.env.SESSION_TTL) || 3600,
+  JINA_EMBEDDING_MODEL: process.env.JINA_EMBEDDING_MODEL || 'jina-embeddings-v2-base-en',
+  REQUEST_TIMEOUT_MS: Number(process.env.REQUEST_TIMEOUT_MS) || 15000,
+};
+
+module.exports = config;
+</file>
+
+<file path="backend/src/config/index.js">
+const redis = require('./redis');     
+const qdrant = require('./qdrant');   
+const logger = require('../utils/logger');
+
+module.exports = { redis, qdrant, logger };
+</file>
+
+<file path="backend/src/config/qdrant.js">
+const { QdrantClient } = require('@qdrant/js-client-rest');
+const env = require('./env')
+
+const qdrant = new QdrantClient({
+  url: env.QDRANT_URL,
+  apiKey: env.QDRANT_API_KEY
+});
+
+module.exports = qdrant;
+</file>
+
+<file path="backend/src/config/redis.js">
+const Redis = require('redis');
+const logger = require('../utils/logger');
+const env = require('./env')
+
+const redis = Redis.createClient({ url: env.REDIS_URL });
+redis.connect().catch(err => logger.error('Redis connection failed:', err));
+
+module.exports = redis;
+</file>
+
+<file path="backend/src/index.js">
+const express = require('express');
+const cors = require('cors');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const dotenv = require('dotenv')
+const Redis = require('redis');
+const { QdrantClient } = require('@qdrant/js-client-rest');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const { v4: uuidv4 } = require('uuid');
+const rateLimit = require('express-rate-limit');
+
+dotenv.config();
+
+const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: env.FRONTEND_URL || "http://localhost:5173",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// Initialize services
+const redis = Redis.createClient({
+  url: process.env.REDIS_URL
+});
+
+const qdrant = new QdrantClient({
+  url: process.env.QDRANT_URL,
+  apiKey: process.env.QDRANT_API_KEY
+});
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Configuration
+const COLLECTION_NAME = 'news_articles';
+const EMBEDDING_DIM = 1024; // Jina embeddings dimension
+const TOP_K = 5;
+const SESSION_TTL = 3600; // 1 hour
+
+// Connect to Redis
+redis.connect().catch(console.error);
+
+class RAGChatbot {
+  constructor() {
+    this.initializeVectorStore();
+  }
+
+  async initializeVectorStore() {
+    try {
+      // Check if collection exists, create if not
+      const collections = await qdrant.getCollections();
+      const exists = collections.collections.some(c => c.name === COLLECTION_NAME);
+
+      if (!exists) {
+        await qdrant.createCollection(COLLECTION_NAME, {
+          vectors: {
+            size: EMBEDDING_DIM,
+            distance: 'Cosine'
+          }
+        });
+        console.log('Vector collection created successfully');
+      }
+    } catch (error) {
+      console.error('Error initializing vector store:', error);
+    }
+  }
+
+  async getJinaEmbedding(text) {
+    try {
+      const response = await axios.post('https://api.jina.ai/v1/embeddings', {
+        input: [text],
+        model: 'jina-embeddings-v2-base-en'
+      }, {
+        headers: {
+          'Authorization': `Bearer ${process.env.JINA_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data.data[0].embedding;
+    } catch (error) {
+      console.error('Error getting embedding:', error);
+      throw error;
+    }
+  }
+
+  async scrapeNewsArticles() {
+    const articles = [];
+    const sources = [
+      "https://rss.cnn.com/rss/edition.rss",
+      "https://feeds.bbci.co.uk/news/rss.xml",
+      "https://feeds.reuters.com/reuters/worldNews"
+    ];
+
+    try {
+      for (const source of sources) {
+        try {
+          const response = await axios.get(source, {
+            timeout: 15000,
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/123.0 Safari/537.36",
+              "Accept":
+                "application/rss+xml, application/xml, text/xml;q=0.9,*/*;q=0.8",
+            },
+          });
+
+          const $ = cheerio.load(response.data, { xmlMode: true });
+          $('item').slice(0, 20).each((i, elem) => {
+            const title = $(elem).find('title').text();
+            const description = $(elem).find('description').text();
+            const link = $(elem).find('link').text();
+            const pubDate = $(elem).find('pubDate').text();
+
+            if (title && description) {
+              articles.push({
+                id: uuidv4(),
+                title: title.trim(),
+                content: description.trim(),
+                url: link.trim(),
+                publishDate: pubDate.trim(),
+                source,
+              });
+            }
+          });
+        } catch (err) {
+          console.error(`❌ Failed to fetch ${source}:`, err.message);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error scraping articles:', error);
+    }
+
+    return articles.slice(0, 50); // Limit to 50 articles as required
+  }
+
+  async ingestArticles() {
+    try {
+      console.log('Starting article ingestion...');
+      const articles = await this.scrapeNewsArticles();
+
+      if (articles.length === 0) {
+        console.log('No articles found, using sample data...');
+        // Fallback sample articles
+        return this.ingestSampleArticles();
+      }
+
+      const points = [];
+      for (const article of articles) {
+        const text = `${article.title}\n\n${article.content}`;
+        const embedding = await this.getJinaEmbedding(text);
+
+        points.push({
+          id: article.id,
+          vector: embedding,
+          payload: {
+            title: article.title,
+            content: article.content,
+            url: article.url,
+            publishDate: article.publishDate,
+            source: article.source
+          }
+        });
+
+        // Rate limiting for API calls
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      await qdrant.upsert(COLLECTION_NAME, {
+        wait: true,
+        points: points
+      });
+
+      console.log(`Successfully ingested ${articles.length} articles`);
+      return articles.length;
+    } catch (error) {
+      console.error('Error ingesting articles:', error);
+      throw error;
+    }
+  }
+
+  async ingestSampleArticles() {
+    const sampleArticles = [
+      {
+        id: uuidv4(),
+        title: "Technology Advances in AI",
+        content: "Artificial Intelligence continues to evolve rapidly with new breakthroughs in machine learning and natural language processing.",
+        url: "https://example.com/tech-ai",
+        publishDate: new Date().toISOString(),
+        source: "sample"
+      },
+      {
+        id: uuidv4(),
+        title: "Global Climate Change Summit",
+        content: "World leaders gather to discuss climate change initiatives and sustainable development goals for the next decade.",
+        url: "https://example.com/climate",
+        publishDate: new Date().toISOString(),
+        source: "sample"
+      },
+      // Add more sample articles...
+    ];
+
+    const points = [];
+    for (const article of sampleArticles) {
+      const text = `${article.title}\n\n${article.content}`;
+      const embedding = await this.getJinaEmbedding(text);
+
+      points.push({
+        id: article.id,
+        vector: embedding,
+        payload: article
+      });
+    }
+
+    await qdrant.upsert(COLLECTION_NAME, {
+      wait: true,
+      points: points
+    });
+
+    return sampleArticles.length;
+  }
+
+  async retrieveRelevantPassages(query) {
+    try {
+      const queryEmbedding = await this.getJinaEmbedding(query);
+
+      const searchResult = await qdrant.search(COLLECTION_NAME, {
+        vector: queryEmbedding,
+        limit: TOP_K,
+        with_payload: true
+      });
+
+      return searchResult.map(result => ({
+        score: result.score,
+        title: result.payload.title,
+        content: result.payload.content,
+        url: result.payload.url,
+        publishDate: result.payload.publishDate
+      }));
+    } catch (error) {
+      console.error('Error retrieving passages:', error);
+      throw error;
+    }
+  }
+
+  async generateResponse(query, context, chatHistory) {
+    try {
+      const contextText = context.map(c =>
+        `Title: ${c.title}\nContent: ${c.content}\nURL: ${c.url}\n---`
+      ).join('\n\n');
+
+      const historyText = chatHistory.slice(-6).map(msg =>
+        `${msg.role}: ${msg.content}`
+      ).join('\n');
+
+      const prompt = `
+You are a helpful news assistant. Answer the user's question based on the following news articles and chat history.
+
+Chat History:
+${historyText}
+
+Relevant News Articles:
+${contextText}
+
+User Question: ${query}
+
+Instructions:
+- Provide a comprehensive and accurate answer based on the news articles
+- If the articles don't contain relevant information, say so politely
+- Include source URLs when referencing specific articles
+- Keep responses conversational and helpful
+- Be concise but informative
+
+Answer:`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Error generating response:', error);
+      throw error;
+    }
+  }
+
+  async processQuery(sessionId, query) {
+    try {
+      // Get chat history
+      const historyKey = `session:${sessionId}:history`;
+      const history = await redis.lRange(historyKey, 0, -1);
+      const chatHistory = history.map(h => JSON.parse(h));
+
+      // Add user message to history
+      const userMessage = { role: 'user', content: query, timestamp: Date.now() };
+      await redis.rPush(historyKey, JSON.stringify(userMessage));
+      await redis.expire(historyKey, SESSION_TTL);
+
+      // Retrieve relevant passages
+      const relevantPassages = await this.retrieveRelevantPassages(query);
+
+      // Generate response
+      const response = await this.generateResponse(query, relevantPassages, chatHistory);
+
+      // Add assistant response to history
+      const assistantMessage = {
+        role: 'assistant',
+        content: response,
+        sources: relevantPassages.map(p => ({ title: p.title, url: p.url })),
+        timestamp: Date.now()
+      };
+      await redis.rPush(historyKey, JSON.stringify(assistantMessage));
+      await redis.expire(historyKey, SESSION_TTL);
+
+      return {
+        response,
+        sources: relevantPassages.map(p => ({ title: p.title, url: p.url }))
+      };
+    } catch (error) {
+      console.error('Error processing query:', error);
+      throw error;
+    }
+  }
+
+  async getSessionHistory(sessionId) {
+    try {
+      const historyKey = `session:${sessionId}:history`;
+      const history = await redis.lRange(historyKey, 0, -1);
+      return history.map(h => JSON.parse(h));
+    } catch (error) {
+      console.error('Error getting session history:', error);
+      return [];
+    }
+  }
+
+  async clearSession(sessionId) {
+    try {
+      const historyKey = `session:${sessionId}:history`;
+      await redis.del(historyKey);
+      return true;
+    } catch (error) {
+      console.error('Error clearing session:', error);
+      return false;
+    }
+  }
+}
+
+// Initialize RAG chatbot
+const ragChatbot = new RAGChatbot();
+
+// REST API Routes
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+app.post('/api/sessions', (req, res) => {
+  const sessionId = uuidv4();
+  res.json({ sessionId });
+});
+
+app.get('/api/sessions/:sessionId/history', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const history = await ragChatbot.getSessionHistory(sessionId);
+    res.json({ history });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get session history' });
+  }
+});
+
+app.delete('/api/sessions/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const success = await ragChatbot.clearSession(sessionId);
+    res.json({ success });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to clear session' });
+  }
+});
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { sessionId, message } = req.body;
+
+    if (!sessionId || !message) {
+      return res.status(400).json({ error: 'Missing sessionId or message' });
+    }
+
+    const result = await ragChatbot.processQuery(sessionId, message);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process query' });
+  }
+});
+
+app.post('/api/ingest', async (req, res) => {
+  try {
+    const count = await ragChatbot.ingestArticles();
+    res.json({ message: `Successfully ingested ${count} articles` });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to ingest articles' });
+  }
+});
+
+// Socket.IO for real-time chat
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  socket.on('join-session', (sessionId) => {
+    socket.join(sessionId);
+    console.log(`User ${socket.id} joined session ${sessionId}`);
+  });
+
+  socket.on('send-message', async (data) => {
+    console.log('message recieved :', data)
+    try {
+      const { sessionId, message } = data;
+
+      // Emit typing indicator
+      io.to(sessionId).emit('bot-typing', true);
+
+      const result = await ragChatbot.processQuery(sessionId, message);
+      console.log('result from chatbot : ',result)
+
+      // Emit response
+      io.to(sessionId).emit('bot-typing', false);
+      io.to(sessionId).emit('bot-response', {
+        message: result.response,
+        sources: result.sources,
+        timestamp: Date.now()
+      });
+
+    } catch (error) {
+      socket.emit('error', { message: 'Failed to process message' });
+    }
+  });
+
+  socket.on('clear-session', async (sessionId) => {
+    try {
+      await ragChatbot.clearSession(sessionId);
+      socket.to(sessionId).emit('session-cleared');
+    } catch (error) {
+      socket.emit('error', { message: 'Failed to clear session' });
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Initialize articles on startup
+setTimeout(async () => {
+  try {
+    console.log('Initializing articles...');
+    await ragChatbot.ingestArticles();
+    console.log('Articles initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize articles:', error);
+  }
+}, 5000);
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+</file>
+
+<file path="backend/src/routes/chat.js">
+const express = require('express');
+const chatbot = require('../services/chatbot');
+
+const router = express.Router();
+
+router.post('/', async (req, res) => {
+  const { sessionId, message } = req.body;
+  if (!sessionId || !message) return res.status(400).json({ error: "Missing sessionId or message" });
+
+  try {
+    const result = await chatbot.processQuery(sessionId, message);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to process query" });
+  }
+});
+
+router.post('/ingest', async (req, res) => {
+  try {
+    const count = await chatbot.ingestArticles();
+    res.json({ message: `Ingested ${count} articles` });
+  } catch (err) {
+    res.status(500).json({ error: "Ingestion failed" });
+  }
+});
+
+module.exports = router;
+</file>
+
+<file path="backend/src/routes/index.js">
+const express = require('express');
+const chatRoutes = require('./chat');
+const sessionRoutes = require('./session');
+
+const router = express.Router();
+
+router.use('/chat', chatRoutes);
+router.use('/sessions', sessionRoutes);
+
+router.get('/health', (req, res) => res.json({ status: 'healthy', timestamp: new Date().toISOString() }));
+
+module.exports = router;
+</file>
+
+<file path="backend/src/routes/session.js">
+const express = require('express');
+const { v4: uuidv4 } = require('uuid');
+const chatbot = require('../services/chatbot');
+
+const router = express.Router();
+
+router.post('/', (req, res) => res.json({ sessionId: uuidv4() }));
+router.get('/:sessionId/history', async (req, res) => res.json({ history: await chatbot.getHistory(req.params.sessionId) }));
+router.delete('/:sessionId', async (req, res) => res.json({ success: await chatbot.clearHistory(req.params.sessionId) }));
+
+module.exports = router;
+</file>
+
+<file path="backend/src/server.js">
+const express = require('express');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const routes = require('./routes');
+const chatSocket = require('./socket/chat');
+const { errorHandler } = require('./utils/errorHandler');
+const logger = require('./utils/logger');
+const env = require('./config/env')
+
+
+const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: { origin: env.FRONTEND_URL || "http://localhost:5173", methods: ["GET", "POST"] }
+});
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Rate Limiting
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+
+// Routes
+app.use('/api', routes);
+
+// Error Handling
+app.use(errorHandler);
+
+// Socket.IO
+io.on('connection', (socket) => chatSocket(io, socket));
+
+// Start Server
+const PORT = env.PORT || 5000;
+server.listen(PORT, () => {
+  logger.info(`🚀 Server running on port ${PORT}`);
+});
+</file>
+
+<file path="backend/src/services/chatbot.js">
+const redis = require('../config/redis');
+const qdrant = require('../config/qdrant');
+const { getJinaEmbedding } = require('./embedding');
+const { scrapeNewsArticles } = require('./scraper');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { v4: uuidv4 } = require('uuid');
+const logger = require('../utils/logger');
+const env = require('../config/env')
+
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const COLLECTION_NAME = 'news_articles';
+const EMBEDDING_DIM = 1024;
+const TOP_K = 5;
+const SESSION_TTL = 3600;
+
+class RAGChatbot {
+  async initialize() {
+    try {
+      const collections = await qdrant.getCollections();
+      if (!collections.collections.some(c => c.name === COLLECTION_NAME)) {
+        await qdrant.createCollection(COLLECTION_NAME, {
+          vectors: { size: EMBEDDING_DIM, distance: 'Cosine' }
+        });
+        logger.info('✅ Vector collection created');
+      }
+    } catch (err) {
+      logger.error('Error initializing Qdrant:', err);
+    }
+  }
+
+  async ingestArticles() {
+    const articles = await scrapeNewsArticles();
+    if (!articles.length) return 0;
+
+    const points = [];
+    for (const article of articles) {
+      const embedding = await getJinaEmbedding(`${article.title}\n\n${article.content}`);
+      points.push({
+        id: article.id || uuidv4(),
+        vector: embedding,
+        payload: article
+      });
+    }
+    await qdrant.upsert(COLLECTION_NAME, { wait: true, points });
+    logger.info(`Ingested ${articles.length} articles`);
+    return articles.length;
+  }
+
+  async processQuery(sessionId, query) {
+    const historyKey = `session:${sessionId}:history`;
+    const history = (await redis.lRange(historyKey, 0, -1)).map(JSON.parse);
+
+    await redis.rPush(historyKey, JSON.stringify({ role: 'user', content: query, timestamp: Date.now() }));
+    await redis.expire(historyKey, SESSION_TTL);
+
+    const queryEmbedding = await getJinaEmbedding(query);
+    const results = await qdrant.search(COLLECTION_NAME, {
+      vector: queryEmbedding, limit: TOP_K, with_payload: true
+    });
+
+    const context = results.map(r => r.payload);
+    const contextText = context.map(c => `Title: ${c.title}\nContent: ${c.content}\nURL: ${c.url}`).join("\n\n");
+    const historyText = history.slice(-6).map(h => `${h.role}: ${h.content}`).join("\n");
+
+    const prompt = `
+You are a helpful news assistant. 
+Chat History:\n${historyText}
+Relevant News:\n${contextText}
+User: ${query}
+Answer:`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const answer = response.text();
+
+    await redis.rPush(historyKey, JSON.stringify({ role: 'assistant', content: answer, timestamp: Date.now() }));
+    await redis.expire(historyKey, SESSION_TTL);
+
+    return { response: answer, sources: context.map(c => ({ title: c.title, url: c.url })) };
+  }
+
+  async getHistory(sessionId) {
+    const history = await redis.lRange(`session:${sessionId}:history`, 0, -1);
+    return history.map(JSON.parse);
+  }
+
+  async clearHistory(sessionId) {
+    await redis.del(`session:${sessionId}:history`);
+    return true;
+  }
+}
+
+module.exports = new RAGChatbot();
+</file>
+
+<file path="backend/src/services/embedding.js">
+const axios = require('axios');
+const config = require('../config/env');
+const logger = require('../utils/logger');
+
+const JINA_URL = 'https://api.jina.ai/v1/embeddings';
+const DEFAULT_MODEL = config.JINA_EMBEDDING_MODEL;
+const DEFAULT_TIMEOUT = config.REQUEST_TIMEOUT_MS || 15000;
+const MAX_RETRIES = 3;
+
+/**
+ * Sleep helper
+ */
+function sleep(ms) {
+  return new Promise((res) => setTimeout(res, ms));
+}
+
+/**
+ * Get embedding for a single text string from Jina (with retries).
+ * @param {string} text
+ * @param {object} options
+ * @returns {Promise<number[]>} embedding vector
+ */
+async function getJinaEmbedding(text, { model = DEFAULT_MODEL, retries = MAX_RETRIES } = {}) {
+  if (!text || !text.trim()) throw new Error('Text is empty for embedding');
+  try {
+    const resp = await axios.post(
+      JINA_URL,
+      { input: [text], model },
+      {
+        headers: {
+          Authorization: `Bearer ${config.JINA_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: DEFAULT_TIMEOUT
+      }
+    );
+
+    if (!resp.data || !resp.data.data || !resp.data.data[0]) {
+      throw new Error('Unexpected embedding response format from Jina');
+    }
+    return resp.data.data[0].embedding;
+  } catch (err) {
+    if (retries > 0) {
+      logger.warn(`getJinaEmbedding failed, retrying (${MAX_RETRIES - retries + 1})... ${err.message}`);
+      await sleep(500 * (MAX_RETRIES - retries + 1)); // backoff
+      return getJinaEmbedding(text, { model, retries: retries - 1 });
+    }
+    logger.error('getJinaEmbedding final failure:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Batch embeddings (simple batcher).
+ * Returns array of embeddings aligned with texts array.
+ * @param {string[]} texts
+ * @param {object} options
+ * @returns {Promise<number[][]>}
+ */
+async function getJinaEmbeddingsBatch(texts, { model = DEFAULT_MODEL, batchSize = 16 } = {}) {
+  if (!Array.isArray(texts) || texts.length === 0) return [];
+  const results = [];
+  for (let i = 0; i < texts.length; i += batchSize) {
+    const batch = texts.slice(i, i + batchSize);
+    const resp = await axios.post(
+      JINA_URL,
+      { input: batch, model },
+      {
+        headers: {
+          Authorization: `Bearer ${config.JINA_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: DEFAULT_TIMEOUT * 2
+      }
+    );
+
+    if (!resp.data || !resp.data.data) {
+      throw new Error('Unexpected batch embedding response format from Jina');
+    }
+
+    for (const item of resp.data.data) results.push(item.embedding);
+    // tiny pause to be nice to the API
+    await sleep(100);
+  }
+  return results;
+}
+
+module.exports = {
+  getJinaEmbedding,
+  getJinaEmbeddingsBatch
+};
+</file>
+
+<file path="backend/src/services/scraper.js">
+const axios = require('axios');
+const cheerio = require('cheerio');
+const { v4: uuidv4 } = require('uuid');
+const config = require('../config/env');
+const logger = require('../utils/logger');
+
+const DEFAULT_SOURCES = [
+  'https://feeds.bbci.co.uk/news/rss.xml',
+  'https://www.theguardian.com/world/rss',
+  'https://rss.cnn.com/rss/edition.rss',
+  'https://www.aljazeera.com/xml/rss/all.xml',
+  'https://feeds.bbci.co.uk/news/rss.xml',
+  'https://feeds.reuters.com/reuters/worldNews'
+];
+
+const DEFAULT_TIMEOUT = config.REQUEST_TIMEOUT_MS || 15000;
+
+/**
+ * fetchUrl - simple GET with timeout & UA
+ */
+async function fetchUrl(url, timeout = DEFAULT_TIMEOUT) {
+  try {
+    const res = await axios.get(url, {
+      timeout,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; NewsScraper/1.0; +https://example.com)',
+        Accept: 'application/rss+xml, application/xml, text/xml, text/html, */*;q=0.1'
+      }
+    });
+    return res.data;
+  } catch (err) {
+    logger.warn(`fetchUrl failed for ${url}: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * parseRss - parse RSS XML and return array of article objects
+ */
+function parseRss(xml, sourceUrl) {
+  const $ = cheerio.load(xml, { xmlMode: true });
+  const items = [];
+  $('item').each((i, el) => {
+    const title = $(el).find('title').text();
+    const description = $(el).find('description').text() || $(el).find('summary').text();
+    const link = $(el).find('link').text();
+    const pubDate = $(el).find('pubDate').text();
+    if (title && (description || link)) {
+      items.push({
+        id: uuidv4(),
+        title: title.trim(),
+        content: (description || '').trim(),
+        url: (link || '').trim(),
+        publishDate: pubDate ? pubDate.trim() : new Date().toISOString(),
+        source: sourceUrl
+      });
+    }
+  });
+  return items;
+}
+
+/**
+ * htmlFallback - given an article URL, try to extract a title + snippet
+ */
+async function htmlFallback(url) {
+  const html = await fetchUrl(url);
+  if (!html) return null;
+  const $ = cheerio.load(html);
+  const title =
+    $('meta[property="og:title"]').attr('content') ||
+    $('meta[name="twitter:title"]').attr('content') ||
+    $('title').text() ||
+    '';
+  const desc =
+    $('meta[property="og:description"]').attr('content') ||
+    $('meta[name="description"]').attr('content') ||
+    $('meta[name="twitter:description"]').attr('content') ||
+    $('article').text().slice(0, 400) ||
+    '';
+  return {
+    id: uuidv4(),
+    title: title.trim() || 'Untitled',
+    content: (desc || '').trim(),
+    url,
+    publishDate: new Date().toISOString(),
+    source: url
+  };
+}
+
+/**
+ * scrapeNewsArticles - main exported function
+ * - sources: array of feed URLs (defaults to DEFAULT_SOURCES)
+ * - limit: max number of articles to return
+ */
+async function scrapeNewsArticles(sources = DEFAULT_SOURCES, limit = 50) {
+  const articles = [];
+  const seenUrls = new Set();
+
+  for (const source of sources) {
+    // try RSS/atom first
+    const xml = await fetchUrl(source);
+    if (xml) {
+      try {
+        const parsed = parseRss(xml, source);
+        for (const a of parsed) {
+          if (a.url && !seenUrls.has(a.url)) {
+            seenUrls.add(a.url);
+            articles.push(a);
+            if (articles.length >= limit) return articles.slice(0, limit);
+          }
+        }
+      } catch (err) {
+        logger.warn(`Failed to parse RSS from ${source}: ${err.message}`);
+      }
+    }
+
+    // If RSS didn't produce items, try crawling the page for links and fetch a few
+    if (articles.length < limit) {
+      try {
+        const html = await fetchUrl(source);
+        if (html) {
+          const $ = cheerio.load(html);
+          // collect candidate links (heuristic)
+          const links = $('a[href]')
+            .map((i, el) => $(el).attr('href'))
+            .get()
+            .filter(Boolean)
+            // make absolute if needed
+            .map((href) => {
+              try {
+                return new URL(href, source).toString();
+              } catch {
+                return null;
+              }
+            })
+            .filter(Boolean);
+
+          // keep only unique links
+          const uniqueLinks = [...new Set(links)].slice(0, 20);
+          for (const l of uniqueLinks) {
+            if (seenUrls.has(l)) continue;
+            const art = await htmlFallback(l);
+            if (art && !seenUrls.has(art.url)) {
+              seenUrls.add(art.url);
+              articles.push(art);
+              if (articles.length >= limit) return articles.slice(0, limit);
+            }
+          }
+        }
+      } catch (err) {
+        logger.warn(`Fallback crawling failed for ${source}: ${err.message}`);
+      }
+    }
+  }
+
+  return articles.slice(0, limit);
+}
+
+module.exports = {
+  scrapeNewsArticles,
+  DEFAULT_SOURCES
+};
+</file>
+
+<file path="backend/src/socket/chat.js">
+const chatbot = require('../services/chatbot');
+const { logger } = require('../config')
+
+module.exports = (io, socket) => {
+  logger.info(`User connected: ${socket.id}`);
+
+  socket.on('join-session', (sessionId) => {
+    socket.join(sessionId);
+    logger.info(`User ${socket.id} joined session ${sessionId}`);
+  });
+
+  socket.on('send-message', async ({ sessionId, message }) => {
+    io.to(sessionId).emit('bot-typing', true);
+    try {
+      const result = await chatbot.processQuery(sessionId, message);
+      io.to(sessionId).emit('bot-typing', false);
+      io.to(sessionId).emit('bot-response', { message: result.response, sources: result.sources, timestamp: Date.now() });
+    } catch {
+      socket.emit('error', { message: "Processing failed" });
+    }
+  });
+
+  socket.on('clear-session', async (sessionId) => {
+    await chatbot.clearHistory(sessionId);
+    io.to(sessionId).emit('session-cleared');
+  });
+
+  socket.on('disconnect', () => logger.info(`User disconnected: ${socket.id}`));
+};
+</file>
+
+<file path="backend/src/utils/errorHandler.js">
+function errorHandler(err, req, res, next) {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something went wrong!" });
+}
+
+module.exports = { errorHandler };
+</file>
+
+<file path="backend/src/utils/logger.js">
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [new winston.transports.Console({ format: winston.format.simple() })],
+});
+
+module.exports = logger;
+</file>
+
+<file path="frontend-vite/.gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
+<file path="frontend-vite/eslint.config.js">
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+</file>
+
+<file path="frontend-vite/index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>News Chatbot</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="frontend-vite/package.json">
+{
+  "name": "frontend-vite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "axios": "^1.12.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.13"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "vite": "^7.1.2"
+  }
+}
+</file>
+
+<file path="frontend-vite/public/vite.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
+</file>
+
+<file path="frontend-vite/README.md">
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+</file>
+
+<file path="frontend-vite/src/App.css">
+@import "tailwindcss";
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+</file>
+
+<file path="frontend-vite/src/App.jsx">
+import React from "react";
+import useChat from "./hooks/useChat";
+import ChatHeader from "./components/ChatHeader";
+import MessageList from "./components/MessageList";
+import MessageInput from "./components/MessageInput";
+import ChatFooter from "./components/ChatFooter";
+
+function App() {
+  const {
+    messages,
+    isTyping,
+    error,
+    socket,
+    sessionId,
+    isLoading,
+    sendMessage,
+    resetSession,
+    inputMessage,
+    setInputMessage,
+    inputRef,
+    messagesEndRef,
+    setError,
+  } = useChat();
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-100 w-[100vw]">
+      <ChatHeader onReset={resetSession} isLoading={isLoading} />
+
+      <main className="flex-1 overflow-y-auto p-6">
+        {error && (
+          <div className="flex justify-between items-center mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+            <span>⚠️ {error}</span>
+            <button onClick={() => setError(null)} className="font-bold">×</button>
+          </div>
+        )}
+        <MessageList
+          messages={messages}
+          isTyping={isTyping}
+          messagesEndRef={messagesEndRef}
+        />
+      </main>
+
+      <MessageInput
+        inputMessage={inputMessage}
+        setInputMessage={setInputMessage}
+        sendMessage={sendMessage}
+        isLoading={isLoading}
+        inputRef={inputRef}
+      />
+
+      <ChatFooter socket={socket} sessionId={sessionId} />
+    </div>
+  );
+}
+
+export default App;
+</file>
+
+<file path="frontend-vite/src/assets/react.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+</file>
+
+<file path="frontend-vite/src/components/ChatFooter.jsx">
+export default function ChatFooter({ socket, sessionId }) {
+  return (
+    <footer className="flex justify-between items-center px-6 py-2 bg-gray-100 text-sm text-gray-600">
+      <span
+        className={socket?.connected ? "text-green-600" : "text-red-600"}
+      >
+        {socket?.connected ? "🟢 Connected" : "🔴 Disconnected"}
+      </span>
+      {sessionId && (
+        <span className="text-gray-500">Session: {sessionId.slice(-8)}</span>
+      )}
+    </footer>
+  );
+}
+</file>
+
+<file path="frontend-vite/src/components/ChatHeader.jsx">
+export default function ChatHeader({ onReset, isLoading }) {
+  return (
+    <header className="flex justify-between items-center px-6 py-4 bg-blue-800 text-white shadow-lg">
+      <div>
+        <h1 className="text-xl font-bold">📰 News Chat Assistant</h1>
+        <p className="text-sm opacity-90">Powered by RAG & AI</p>
+      </div>
+      <button
+        onClick={onReset}
+        disabled={isLoading}
+        className="px-4 py-2 bg-white text-blue-800 rounded-lg hover:bg-gray-100 transition-colors"
+      >
+        🔄 Reset
+      </button>
+    </header>
+  );
+}
+</file>
+
+<file path="frontend-vite/src/components/ChatMessage.jsx">
+export default function ChatMessage({ message }) {
+  const formatTimestamp = (timestamp) =>
+    new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  return (
+    <div
+      className={`flex ${
+        message.type === "user" ? "justify-end" : "justify-start"
+      } mb-4`}
+    >
+      <div
+        className={`max-w-xs md:max-w-md p-4 rounded-3xl shadow-md transition-all ${
+          message.type === "user"
+            ? "bg-blue-600 text-white rounded-br-none"
+            : "bg-gray-200 text-gray-900 rounded-bl-none"
+        }`}
+      >
+        <div>{message.content}</div>
+
+        {message.sources?.length > 0 && (
+          <div className="mt-2 text-sm text-gray-700">
+            <span className="font-bold">Sources:</span>
+            {message.sources.map((src, i) => (
+              <a
+                key={i}
+                href={src.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-blue-600 underline hover:no-underline"
+              >
+                {src.title}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-2 text-xs text-gray-400 text-right">
+          {formatTimestamp(message.timestamp)}
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend-vite/src/components/MessageInput.jsx">
+export default function MessageInput({
+  inputMessage,
+  setInputMessage,
+  sendMessage,
+  isLoading,
+  inputRef,
+}) {
+  return (
+    <form
+      onSubmit={sendMessage}
+      className="px-6 py-4 bg-white border-t border-gray-200"
+    >
+      <div className="flex items-center space-x-2">
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          placeholder="Ask me about news..."
+          disabled={isLoading}
+          className="flex-1 px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 transition-all"
+        />
+        <button
+          type="submit"
+          disabled={isLoading || !inputMessage.trim()}
+          className="px-5 py-3 bg-blue-600 text-white rounded-full transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {isLoading ? "⏳" : "➤"}
+        </button>
+      </div>
+    </form>
+  );
+}
+</file>
+
+<file path="frontend-vite/src/components/MessageList.jsx">
+import ChatMessage from "./ChatMessage";
+
+export default function MessageList({ messages, isTyping, messagesEndRef }) {
+  return (
+    <div className="space-y-2">
+      {messages.map((msg) => (
+        <ChatMessage key={msg.id} message={msg} />
+      ))}
+
+      {isTyping && (
+        <div className="flex items-center space-x-2 text-gray-500">
+          <div className="flex space-x-1">
+            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+          </div>
+          <span className="text-sm">Assistant is typing...</span>
+        </div>
+      )}
+
+      <div ref={messagesEndRef} />
+    </div>
+  );
+}
+</file>
+
+<file path="frontend-vite/src/hooks/useChat.js">
+import { useState, useEffect, useRef } from "react";
+import io from "socket.io-client";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+export default function useChat() {
+  const [sessionId, setSessionId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [error, setError] = useState(null);
+
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Scroll to bottom on new messages/typing
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
+  // Initialize session
+  useEffect(() => {
+    initializeSession();
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
+
+  const initializeSession = async () => {
+    try {
+      let newSessionId = "";
+      if (localStorage.getItem("sessionId")) {
+        newSessionId = localStorage.getItem("sessionId");
+      } else {
+        const response = await axios.post(`${API_URL}/api/sessions`);
+        newSessionId = response.data.sessionId;
+        localStorage.setItem("sessionId", newSessionId);
+      }
+      setSessionId(newSessionId);
+
+      // Connect socket
+      const newSocket = io(API_URL);
+      setSocket(newSocket);
+
+      newSocket.emit("join-session", newSessionId);
+
+      newSocket.on("bot-response", (data) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            type: "bot",
+            content: data.message,
+            sources: data.sources,
+            timestamp: data.timestamp,
+          },
+        ]);
+        setIsLoading(false);
+        setIsTyping(false);
+      });
+
+      newSocket.on("bot-typing", (typing) => setIsTyping(typing));
+      newSocket.on("session-cleared", () => {
+        setMessages([]);
+        setError(null);
+      });
+      newSocket.on("error", (error) => {
+        setError(error.message);
+        setIsLoading(false);
+        setIsTyping(false);
+      });
+
+      await loadSessionHistory(newSessionId);
+
+      // First-time welcome message
+      if (messages.length === 0) {
+        setMessages([
+          {
+            id: "welcome",
+            type: "bot",
+            content:
+              "Hello! I'm your news assistant. Ask me anything about recent news and I'll help you find relevant information from our database.",
+            timestamp: Date.now(),
+          },
+        ]);
+      }
+    } catch (error) {
+      setError("Failed to initialize session");
+      console.error("Session initialization error:", error);
+    }
+  };
+
+  const loadSessionHistory = async (sessionId) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/sessions/${sessionId}/history`
+      );
+      const history = response.data.history;
+      const formattedMessages = history.map((msg, index) => ({
+        id: index,
+        type: msg.role === "user" ? "user" : "bot",
+        content: msg.content,
+        sources: msg.sources || [],
+        timestamp: msg.timestamp,
+      }));
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error("Failed to load session history:", error);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputMessage.trim() || isLoading || !sessionId) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: "user",
+      content: inputMessage.trim(),
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    if (socket) {
+      socket.emit("send-message", {
+        sessionId,
+        message: inputMessage.trim(),
+      });
+    } else {
+      try {
+        const response = await axios.post(`${API_URL}/api/chat`, {
+          sessionId,
+          message: inputMessage.trim(),
+        });
+
+        const botMessage = {
+          id: Date.now() + 1,
+          type: "bot",
+          content: response.data.response,
+          sources: response.data.sources,
+          timestamp: Date.now(),
+        };
+
+        setMessages((prev) => [...prev, botMessage]);
+      } catch (error) {
+        setError("Failed to send message");
+        console.error("Send message error:", error);
+      }
+      setIsLoading(false);
+    }
+
+    setInputMessage("");
+    inputRef.current?.focus();
+  };
+
+  const resetSession = async () => {
+    if (!sessionId) return;
+
+    try {
+      setIsLoading(true);
+
+      if (socket) {
+        socket.emit("clear-session", sessionId);
+      } else {
+        await axios.delete(`${API_URL}/api/sessions/${sessionId}`);
+        setMessages([]);
+      }
+
+      setError(null);
+
+      setTimeout(() => {
+        setMessages([
+          {
+            id: "welcome-reset",
+            type: "bot",
+            content:
+              "Session has been reset. How can I help you with news today?",
+            timestamp: Date.now(),
+          },
+        ]);
+      }, 500);
+    } catch (error) {
+      setError("Failed to reset session");
+      console.error("Reset session error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    sessionId,
+    messages,
+    inputMessage,
+    setInputMessage,
+    isLoading,
+    isTyping,
+    socket,
+    error,
+    setError,
+    sendMessage,
+    resetSession,
+    messagesEndRef,
+    inputRef,
+  };
+}
+</file>
+
+<file path="frontend-vite/src/index.css">
+@import "tailwindcss";s
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+</file>
+
+<file path="frontend-vite/src/main.jsx">
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+</file>
+
+<file path="frontend-vite/vite.config.js">
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+})
+</file>
+
+</files>

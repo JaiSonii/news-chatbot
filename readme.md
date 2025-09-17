@@ -49,22 +49,24 @@ const DEFAULT_SOURCES = [
 async function scrapeNewsArticles(sources = DEFAULT_SOURCES, limit = 50) {
   // ... fetch and parse RSS feeds
 }
+```
 
-b. Embedding Generation & Storage
+#### b. Embedding Generation & Storage
 
 Generates embeddings using Jina AI and stores them in Qdrant.
 
-File: backend/src/services/embedding.js
-
+_File: `backend/src/services/embedding.js`_
+```js
 async function getJinaEmbedding(text, { model = DEFAULT_MODEL } = {}) {
   const resp = await axios.post(JINA_URL, { input: [text], model }, {
     headers: { Authorization: `Bearer ${process.env.JINA_API_KEY}` }
   });
   return resp.data.data[0].embedding;
 }
+```
 
-File: backend/src/services/chatbot.js
-
+_File: `backend/src/services/chatbot.js`_
+```js
 const embedding = await getJinaEmbedding(`${article.title}\n\n${article.content}`);
 points.push({
   id: article.id || uuidv4(),
@@ -72,8 +74,9 @@ points.push({
   payload: article
 });
 await qdrant.upsert(COLLECTION_NAME, { wait: true, points });
+```
 
-c. Query → Retrieval → Generation
+#### c. Query → Retrieval → Generation
 
     Embed query
 
@@ -83,6 +86,7 @@ c. Query → Retrieval → Generation
 
     Call Gemini
 
+```js
 const queryEmbedding = await getJinaEmbedding(query);
 const results = await qdrant.search(COLLECTION_NAME, {
   vector: queryEmbedding, limit: TOP_K, with_payload: true
@@ -98,8 +102,9 @@ Answer:`;
 
 const result = await model.generateContent(prompt);
 const answer = result.response.text();
+```
 
-2. Redis Caching & Session Management
+### 2. Redis Caching & Session Management
 
     Each session = UUID stored in localStorage
 
@@ -107,13 +112,15 @@ const answer = result.response.text();
 
     Default TTL = 1 hour
 
+```js
 const SESSION_TTL = 3600; // 1 hour
 const historyKey = `session:${sessionId}:history`;
 
 await redis.rPush(historyKey, JSON.stringify({ role: 'user', content: query, timestamp: Date.now() }));
 await redis.expire(historyKey, SESSION_TTL);
+```
 
-3. Frontend Communication
+### 3. Frontend Communication
 
     Custom Hook (useChat) handles all state & socket communication.
 
@@ -135,6 +142,7 @@ Prerequisites
     API keys → Jina AI + Google Gemini
 
 Backend Setup
+```
 
 cd backend
 cp .env.example .env   # add API keys + config
@@ -147,10 +155,12 @@ cd frontend-vite
 cp .env.example .env.local   # set VITE_API_URL=http://localhost:5000
 npm install
 npm run dev
-
+```
 🌐 Live Demo
+```
+[https://news-chatbot-eta.vercel.app/](https://news-chatbot-eta.vercel.app/)
+```
 
-👉 Link to your deployed app
 💡 Design Decisions
 
     Socket-first communication → smoother UX vs HTTP polling
